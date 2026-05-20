@@ -130,7 +130,8 @@ async function sendTelegram(article, analysis) {
   await axios.post(
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`,
     {
-      chat_id: process.env.TELEGRAM_CHAT_ID,
+      chat_id: process.env.TELEGRAM_GROUP_ID,
+      message_thread_id: parseInt(process.env.TELEGRAM_THREAD_ID),
       text: message,
       parse_mode: 'Markdown',
       disable_web_page_preview: false,
@@ -142,9 +143,23 @@ async function sendTelegram(article, analysis) {
 
 // ─── Fungsi utama ───
 async function runBot() {
-  console.log(
-    `\n🔍 [${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}] Mulai cek berita AI...`,
-  );
+  const startTime = new Date().toLocaleString('id-ID', {
+    timeZone: 'Asia/Jakarta',
+  });
+  console.log(`\n🔍 [${startTime}] Mulai cek berita AI...`);
+
+  // 1. Kirim header scan pagi
+  await axios
+    .post(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`,
+      {
+        chat_id: process.env.TELEGRAM_GROUP_ID,
+        message_thread_id: parseInt(process.env.TELEGRAM_THREAD_ID),
+        text: `📡 *AI News Scan Started*\n🕐 ${startTime}`,
+        parse_mode: 'Markdown',
+      },
+    )
+    .catch((e) => console.error('Header send failed:', e.message));
 
   try {
     const articles = await fetchAINews();
@@ -171,16 +186,26 @@ async function runBot() {
       }
     }
 
-    if (alertCount === 0) {
-      console.log('ℹ️  Tidak ada berita viral ditemukan hari ini.');
-      await axios.post(
+    // 3. Summary selesai scan
+    const summary =
+      alertCount === 0
+        ? `ℹ️ *Tidak ada berita viral AI hari ini.*\n\nBot sudah menganalisis ${articles.length} berita dari hari ini, tidak ada yang memenuhi kriteria viral.`
+        : `✅ *Scan Selesai!*\n\n🎯 Total ${alertCount} alert berita viral terkirim.`;
+
+    await axios
+      .post(
         `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`,
         {
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: `ℹ️ *Tidak ada berita viral AI hari ini.*\n\nBot sudah menganalisis ${articles.length} berita dari hari ini, tidak ada yang memenuhi kriteria viral.`,
+          chat_id: process.env.TELEGRAM_GROUP_ID,
+          message_thread_id: parseInt(process.env.TELEGRAM_THREAD_ID),
+          text: summary,
           parse_mode: 'Markdown',
         },
-      );
+      )
+      .catch((e) => console.error('Summary send failed:', e.message));
+
+    if (alertCount === 0) {
+      console.log('ℹ️  Tidak ada berita viral ditemukan hari ini.');
     } else {
       console.log(`\n🎯 Total ${alertCount} alert terkirim ke Telegram!`);
     }
