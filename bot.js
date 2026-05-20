@@ -72,7 +72,7 @@ async function checkIfViral(article) {
 Kamu adalah analis berita AI. Nilai apakah berita berikut VIRAL atau tidak.
 
 Kriteria VIRAL (harus memenuhi SALAH SATU):
-1. Berita ini berpotensi dibaca/di-share lebih dari 100.000 orang dalam 1 bulan terakhir, atau sudah mendapatkan perhatian besar di media sosial
+1. Berita ini berpotensi dibaca/di-share lebih dari 100.000 orang dalam 24 jam, atau sudah mendapatkan perhatian besar di media sosial
 2. Berita ini bisa mempengaruhi perilaku masyarakat global secara signifikan, atau dampaknya luar biasa besar
 
 Berita:
